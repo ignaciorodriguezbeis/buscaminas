@@ -67,6 +67,25 @@ body {
     width: fit-content;
 }
 
+
+.cell.revealed {
+    background-color: #e0e0e0;
+    border: 2px solid #d0d0d0;
+    box-shadow: none;
+}
+
+.cell.mine {
+    color: red;
+}
+
+.cell.flagged::before {
+    content: "🚩";
+}
+
+.cell.flagged::before {
+    content: "🚩";
+}
+
 .cell {
     width: 30px;
     height: 30px;
@@ -81,16 +100,19 @@ body {
     box-shadow: inset -1px -1px 0 #ffffff, inset 1px 1px 0 #808080;
 }
 
-.cell.revealed {
-    background-color: #e0e0e0;
-    border: 2px solid #d0d0d0;
-    box-shadow: none;
+/* Colores de los números */
+.cell.revealed[data-adjacent-mines="1"] {
+    color: blue;
 }
 
-.cell.mine {
+.cell.revealed[data-adjacent-mines="2"] {
+    color: green;
+}
+
+.cell.revealed[data-adjacent-mines="3"] {
     color: red;
 }
 
-.cell.flagged::before {
-    content: "🚩";
+.cell.revealed[data-adjacent-mines="4"] {
+    color: purple;
 }
