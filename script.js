@@ -1,22 +1,40 @@
 document.addEventListener("DOMContentLoaded", () => {
     const board = document.getElementById("board");
+    const resetButton = document.getElementById("reset-button");
+    const gameOverMessage = document.getElementById("game-over-message");
     const rows = 20;
     const cols = 20;
     const minesCount = 40;
+    let boardMatrix;
+    let gameOver = false;
 
-    // Crear una matriz para almacenar el estado del tablero
-    const boardMatrix = Array.from({ length: rows }, () =>
-        Array.from({ length: cols }, () => ({
-            mine: false,
-            revealed: false,
-            flagged: false,
-            adjacentMines: 0,
-        }))
-    );
+    // Función para inicializar el tablero
+    function initializeBoard() {
+        board.innerHTML = ''; // Limpiar el tablero
+        boardMatrix = Array.from({ length: rows }, () =>
+            Array.from({ length: cols }, () => ({
+                mine: false,
+                revealed: false,
+                flagged: false,
+                adjacentMines: 0,
+            }))
+        );
+
+        placeMines();
+        calculateAdjacentMines();
+        createCells();
+        gameOverMessage.style.display = 'none';
+        gameOver = false;
+    }
+
+    // Función para reiniciar el juego
+    resetButton.addEventListener("click", () => {
+        initializeBoard(); // Reiniciar el tablero
+    });
 
     // Función para manejar el clic en una celda
     function handleCellClick(row, col, cell) {
-        if (boardMatrix[row][col].revealed || boardMatrix[row][col].flagged) return;
+        if (gameOver || boardMatrix[row][col].revealed || boardMatrix[row][col].flagged) return;
 
         cell.classList.add("revealed");
         cell.setAttribute('data-adjacent-mines', boardMatrix[row][col].adjacentMines);
@@ -25,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (boardMatrix[row][col].mine) {
             cell.classList.add("mine");
             cell.textContent = "💣"; // Mostrar una mina
+            triggerGameOver();
         } else {
             cell.textContent = boardMatrix[row][col].adjacentMines || '';
             setColor(cell, boardMatrix[row][col].adjacentMines);
@@ -38,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function handleCellRightClick(row, col, cell, event) {
         event.preventDefault();  // Prevenir el menú contextual predeterminado
 
-        if (boardMatrix[row][col].revealed) return;
+        if (gameOver || boardMatrix[row][col].revealed) return;
 
         if (!boardMatrix[row][col].flagged) {
             boardMatrix[row][col].flagged = true;
@@ -66,6 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
             case 4:
                 cell.style.color = 'purple';
                 break;
+            case 5:
+                cell.style.color = 'orange';
+                break;    
             default:
                 cell.style.color = 'black';
                 break;
@@ -105,13 +127,34 @@ document.addEventListener("DOMContentLoaded", () => {
                         minesCount++;
                     }
                 });
-
                 boardMatrix[row][col].adjacentMines = minesCount;
             }
         }
     }
 
-    // Función de llenado de áreas
+    // Función para crear las celdas en el DOM
+    function createCells() {
+        board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.addEventListener("click", () => handleCellClick(row, col, cell));
+                cell.addEventListener("contextmenu", (event) => handleCellRightClick(row, col, cell, event));
+                board.appendChild(cell);
+            }
+        }
+    }
+
+    // Función de Game Over
+    function triggerGameOver() {
+        gameOver = true;
+        gameOverMessage.style.display = 'block';
+    }
+
+    // Función para revelar las celdas adyacentes recursivamente
     function floodFill(row, col) {
         const directions = [
             [-1, -1], [-1, 0], [-1, 1],
@@ -122,28 +165,12 @@ document.addEventListener("DOMContentLoaded", () => {
         directions.forEach(([dx, dy]) => {
             const newRow = row + dx;
             const newCol = col + dy;
-            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && !boardMatrix[newRow][newCol].revealed) {
-                handleCellClick(newRow, newCol, board.children[newRow * cols + newCol]);
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && !boardMatrix[newRow][newCol].revealed && !boardMatrix[newRow][newCol].mine) {
+                const cell = board.children[newRow * cols + newCol];
+                handleCellClick(newRow, newCol, cell);
             }
         });
     }
 
-    // Colocar minas y calcular minas adyacentes
-    placeMines();
-    calculateAdjacentMines();
-
-    // Configurar las dimensiones del grid
-    board.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
-    board.style.gridTemplateRows = `repeat(${rows}, 30px)`;
-
-    // Crear las celdas del tablero y añadir los manejadores de eventos
-    for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-            const cell = document.createElement("div");
-            cell.className = "cell";
-            cell.addEventListener("click", () => handleCellClick(row, col, cell));
-            cell.addEventListener("contextmenu", (event) => handleCellRightClick(row, col, cell, event));
-            board.appendChild(cell);
-        }
-    }
+    initializeBoard(); // Inicializar el tablero cuando la página carga
 });

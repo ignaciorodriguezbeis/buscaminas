@@ -15,6 +15,7 @@ body {
     box-shadow: 2px 2px 5px #000000;
     user-select: none;
     width: fit-content;
+    position: relative;
 }
 
 .top-bar {
@@ -42,12 +43,12 @@ body {
 }
 
 #reset-button {
-    width: 30px;
-    height: 30px;
-    background-color: #bdbdbd;
-    border: 2px solid #808080;
-    box-shadow: inset -1px -1px 0 #ffffff, inset 1px 1px 0 #808080;
+    font-size: 24px;
+    padding: 10px;
     cursor: pointer;
+    background-color: #f0f0f0;
+    border: 2px solid #ccc;
+    border-radius: 5px;
 }
 
 #reset-button.smiley::after {
@@ -67,7 +68,6 @@ body {
     width: fit-content;
 }
 
-
 .cell.revealed {
     background-color: #e0e0e0;
     border: 2px solid #d0d0d0;
@@ -76,10 +76,6 @@ body {
 
 .cell.mine {
     color: red;
-}
-
-.cell.flagged::before {
-    content: "🚩";
 }
 
 .cell.flagged::before {
@@ -115,4 +111,24 @@ body {
 
 .cell.revealed[data-adjacent-mines="4"] {
     color: purple;
+}
+
+.cell.revealed[data-adjacent-mines="5"] {
+    color: orange;
+}
+
+/* Estilo para el mensaje de Game Over */
+#game-over-message {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    font-weight: bold;
+    color: red;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border: 3px solid black;
+    z-index: 100;
 }
