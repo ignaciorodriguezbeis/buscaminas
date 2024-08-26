@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
         gameOverMessage.style.display = 'none';
         winMessage.style.display = 'none';
         
-        // Create the board
+        
         board.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
         board.style.gridTemplateRows = `repeat(${rows}, 30px)`;
         for (let r = 0; r < rows; r++) {
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Place mines
+       
         let minesPlaced = 0;
         while (minesPlaced < mines) {
             const r = Math.floor(Math.random() * rows);
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!boardArray[r][c].isMine) {
                 boardArray[r][c].isMine = true;
                 minesPlaced++;
-                // Update adjacent cells
+                
                 for (let i = -1; i <= 1; i++) {
                     for (let j = -1; j <= 1; j++) {
                         const nr = r + i;
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         revealCell(row, col);
 
-        // Check win condition
+        
         if (checkWin()) {
             stopTimer();
             showWinMessage();
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 cell.classList.add(`mine-count-${cellData.adjacentMines}`);
             }
             if (cellData.adjacentMines === 0) {
-                // Reveal adjacent cells
+                
                 for (let i = -1; i <= 1; i++) {
                     for (let j = -1; j <= 1; j++) {
                         const nr = parseInt(row) + i;
