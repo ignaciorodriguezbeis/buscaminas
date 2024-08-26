@@ -17,6 +17,21 @@
         <div id="board"></div>
         <div id="game-over-message">Game Over</div>
     </div>
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Ajustes del Juego</h2>
+            <label for="grid-size">Tamaño del tablero (Filas x Columnas):</label>
+            <input type="range" id="grid-size" min="2" max="25" value="20" oninput="this.nextElementSibling.value = this.value">
+            <output>20</output>
+            <br>
+            <label for="mine-count">Cantidad de Minas:</label>
+            <input type="number" id="mine-count" min="1" value="40">
+            <br>
+            <button id="apply-settings-button">Aplicar</button>
+        </div>
+    </div>
+    
     <script src="script.js"></script>
 </body>
 </html>

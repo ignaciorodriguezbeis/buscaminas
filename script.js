@@ -4,9 +4,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const settingsButton = document.getElementById("settings-button");
     const mineCounter = document.getElementById("mine-counter");
     const gameOverMessage = document.getElementById("game-over-message");
-    const rows = 20;
-    const cols = 20;
-    const minesCount = 40;
+    const settingsModal = document.getElementById("settings-modal");
+    const closeButton = document.querySelector(".close-button");
+    const applySettingsButton = document.getElementById("apply-settings-button");
+    const gridSizeInput = document.getElementById("grid-size");
+    const mineCountInput = document.getElementById("mine-count");
+
+    let rows = 20;
+    let cols = 20;
+    let minesCount = 40;
     let boardMatrix;
     let gameOver = false;
     let remainingMines = minesCount;
@@ -37,27 +43,85 @@ document.addEventListener("DOMContentLoaded", () => {
         gameOver = false;
     }
 
-    // Función para reiniciar el juego
-    resetButton.addEventListener("click", () => {
-        initializeBoard(); // Reiniciar el tablero
-    });
+    // Función para colocar minas aleatoriamente
+    function placeMines() {
+        let minesPlaced = 0;
+        while (minesPlaced < minesCount) {
+            const randomRow = Math.floor(Math.random() * rows);
+            const randomCol = Math.floor(Math.random() * cols);
+
+            if (!boardMatrix[randomRow][randomCol].mine) {
+                boardMatrix[randomRow][randomCol].mine = true;
+                minesPlaced++;
+            }
+        }
+    }
+
+    // Función para calcular las minas adyacentes a cada celda
+    function calculateAdjacentMines() {
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                if (!boardMatrix[row][col].mine) {
+                    boardMatrix[row][col].adjacentMines = getAdjacentMines(row, col);
+                }
+            }
+        }
+    }
+
+    // Función para obtener la cantidad de minas adyacentes a una celda
+    function getAdjacentMines(row, col) {
+        let count = 0;
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                const newRow = row + i;
+                const newCol = col + j;
+                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                    if (boardMatrix[newRow][newCol].mine) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    // Función para crear las celdas del tablero
+    function createCells() {
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+
+                cell.addEventListener("click", () => handleCellClick(row, col, cell));
+                cell.addEventListener("contextmenu", (event) => handleCellRightClick(row, col, cell, event));
+
+                board.appendChild(cell);
+            }
+        }
+        board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    }
 
     // Función para manejar el clic en una celda
     function handleCellClick(row, col, cell) {
-        if (gameOver || boardMatrix[row][col].revealed || boardMatrix[row][col].flagged) return;
+        if (gameOver || boardMatrix[row][col].flagged || boardMatrix[row][col].revealed) return;
 
-        cell.classList.add("revealed");
-        cell.setAttribute('data-adjacent-mines', boardMatrix[row][col].adjacentMines);
         boardMatrix[row][col].revealed = true;
 
         if (boardMatrix[row][col].mine) {
             cell.classList.add("mine");
-            cell.textContent = "💣"; // Mostrar una mina
-            triggerGameOver();
+            cell.textContent = "💣";
+            gameOver = true;
+            showGameOver();
         } else {
-            cell.textContent = boardMatrix[row][col].adjacentMines || '';
-            setColor(cell, boardMatrix[row][col].adjacentMines);
-            if (boardMatrix[row][col].adjacentMines === 0) {
+            cell.classList.add("revealed");
+            const adjacentMines = boardMatrix[row][col].adjacentMines;
+            if (adjacentMines > 0) {
+                cell.textContent = adjacentMines;
+                cell.classList.add(`mine-count-${adjacentMines}`);
+            } else {
                 floodFill(row, col);
             }
         }
@@ -83,114 +147,64 @@ document.addEventListener("DOMContentLoaded", () => {
         updateMineCounter(); // Actualizar el contador de minas restantes
     }
 
-    // funcionalidad al botón de ajustes
+    // Función de Game Over
+    function showGameOver() {
+        gameOverMessage.style.display = 'block';
+        gameOverMessage.textContent = "Game Over";
+    }
+
+    // Función para llenar por inundación las celdas adyacentes vacías
+    function floodFill(row, col) {
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                const newRow = row + i;
+                const newCol = col + j;
+                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                    const adjacentCell = document.querySelector(`[data-row='${newRow}'][data-col='${newCol}']`);
+                    if (!boardMatrix[newRow][newCol].revealed && !boardMatrix[newRow][newCol].mine) {
+                        handleCellClick(newRow, newCol, adjacentCell);
+                    }
+                }
+            }
+        }
+    }
+
+    // Función para reiniciar el juego
+    resetButton.addEventListener("click", initializeBoard);
+
+    // Función para abrir la ventana modal de ajustes
     settingsButton.addEventListener("click", () => {
-        alert("Abrir configuraciones (aquí puedes agregar funcionalidad específica para las configuraciones)");
+        settingsModal.style.display = "block";
     });
 
-    initializeBoard(); // Inicializar el tablero cuando la página carga 
+    // Función para cerrar la ventana modal de ajustes
+    closeButton.addEventListener("click", () => {
+        settingsModal.style.display = "none";
+    });
 
-    // Función para cambiar el color del número
-    function setColor(cell, number) {
-        switch (number) {
-            case 1:
-                cell.style.color = 'blue';
-                break;
-            case 2:
-                cell.style.color = 'green';
-                break;
-            case 3:
-                cell.style.color = 'red';
-                break;
-            case 4:
-                cell.style.color = 'purple';
-                break;
-            case 5:
-                cell.style.color = 'orange';
-                break;    
-            default:
-                cell.style.color = 'black';
-                break;
+    // Aplicar los ajustes seleccionados
+    applySettingsButton.addEventListener("click", () => {
+        const newGridSize = parseInt(gridSizeInput.value);
+        const newMinesCount = parseInt(mineCountInput.value);
+
+        if (newMinesCount < 1 || newMinesCount >= newGridSize * newGridSize) {
+            alert("La cantidad de minas debe ser mayor a 0 y menor que el número total de casillas.");
+            return;
         }
-    }
 
-    // Función para colocar minas aleatoriamente en el tablero
-    function placeMines() {
-        let minesPlaced = 0;
-        while (minesPlaced < minesCount) {
-            const row = Math.floor(Math.random() * rows);
-            const col = Math.floor(Math.random() * cols);
-            if (!boardMatrix[row][col].mine) {
-                boardMatrix[row][col].mine = true;
-                minesPlaced++;
-            }
+        rows = newGridSize;
+        cols = newGridSize;
+        minesCount = newMinesCount;
+        initializeBoard(); // Reiniciar el tablero con los nuevos ajustes
+        settingsModal.style.display = "none"; // Cerrar la ventana de ajustes
+    });
+
+    // Cerrar la ventana modal si se hace clic fuera de ella
+    window.addEventListener("click", (event) => {
+        if (event.target == settingsModal) {
+            settingsModal.style.display = "none";
         }
-    }
-
-    // Función para calcular el número de minas adyacentes
-    function calculateAdjacentMines() {
-        const directions = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [0, -1], [0, 1],
-            [1, -1], [1, 0], [1, 1]
-        ];
-
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                if (boardMatrix[row][col].mine) continue;
-
-                let minesCount = 0;
-                directions.forEach(([dx, dy]) => {
-                    const newRow = row + dx;
-                    const newCol = col + dy;
-                    if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && boardMatrix[newRow][newCol].mine) {
-                        minesCount++;
-                    }
-                });
-                boardMatrix[row][col].adjacentMines = minesCount;
-            }
-        }
-    }
-
-    // Función para crear las celdas en el DOM
-    function createCells() {
-        board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-        board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                const cell = document.createElement("div");
-                cell.classList.add("cell");
-                cell.addEventListener("click", () => handleCellClick(row, col, cell));
-                cell.addEventListener("contextmenu", (event) => handleCellRightClick(row, col, cell, event));
-                board.appendChild(cell);
-            }
-        }
-    }
-
-    // Función de Game Over
-    function triggerGameOver() {
-        gameOver = true;
-        gameOverMessage.style.display = 'block';
-    }
-
-    // Función para revelar las celdas adyacentes recursivamente
-    function floodFill(row, col) {
-        const directions = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [0, -1], [0, 1],
-            [1, -1], [1, 0], [1, 1]
-        ];
-
-        directions.forEach(([dx, dy]) => {
-            const newRow = row + dx;
-            const newCol = col + dy;
-            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && !boardMatrix[newRow][newCol].revealed && !boardMatrix[newRow][newCol].mine) {
-                const cell = board.children[newRow * cols + newCol];
-                handleCellClick(newRow, newCol, cell);
-            }
-        });
-    }
+    });
 
     initializeBoard(); // Inicializar el tablero cuando la página carga
 });
