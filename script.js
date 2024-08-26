@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
      // Función para iniciar el contador de tiempo
      function startTimer() {
-        if (timer !== null) return;  // Evitar múltiples timers
+        if (timer !== null) return;  
         timer = setInterval(() => {
             secondsElapsed++;
             updateTimeCounter();
@@ -54,10 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Función para inicializar el tablero
     function initializeBoard() {
-        board.innerHTML = ''; // Limpiar el tablero
+        board.innerHTML = ''; 
         remainingMines = minesCount;
-        updateMineCounter(); // Inicializar el contador de minas
-        resetTimer();  // Reiniciar el contador de tiempo
+        updateMineCounter(); 
+        resetTimer(); 
         boardMatrix = Array.from({ length: rows }, () =>
             Array.from({ length: cols }, () => ({
                 mine: false,
@@ -139,18 +139,15 @@ document.addEventListener("DOMContentLoaded", () => {
    function handleCellClick(row, col, cell) {
     if (gameOver || boardMatrix[row][col].flagged || boardMatrix[row][col].revealed) return;
 
-    if (secondsElapsed === 0) startTimer(); // Iniciar el temporizador en el primer clic
+    if (secondsElapsed === 0) startTimer(); 
 
     boardMatrix[row][col].revealed = true;
-
-
-    // Resto del código para manejar clics...
 
     if (boardMatrix[row][col].mine) {
         cell.classList.add("mine");
         cell.textContent = "💣";
         gameOver = true;
-        stopTimer();  // Detener el contador al perder
+        stopTimer();  
         showGameOver();
         } else {
             cell.classList.add("revealed");
@@ -166,28 +163,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Función para manejar el clic derecho (marcar con banderita)
     function handleCellRightClick(row, col, cell, event) {
-        event.preventDefault();  // Prevenir el menú contextual predeterminado
-
+        event.preventDefault();  
         if (gameOver || boardMatrix[row][col].revealed) return;
 
         if (!boardMatrix[row][col].flagged) {
             boardMatrix[row][col].flagged = true;
             cell.classList.add("flagged");
-            cell.textContent = "🚩";  // Emoji de banderita
+            cell.textContent = "🚩";  
             remainingMines--;
         } else {
             boardMatrix[row][col].flagged = false;
             cell.classList.remove("flagged");
-            cell.textContent = '';  // Remover banderita
+            cell.textContent = '';  
             remainingMines++;
         }
-        updateMineCounter(); // Actualizar el contador de minas restantes
+        updateMineCounter(); 
     }
 
     // Función de Game Over
     function showGameOver() {
         gameOverMessage.style.display = 'block';
-        gameOverMessage.textContent = "Game Over";
+        const minutes = Math.floor(secondsElapsed / 60);
+        const seconds = secondsElapsed % 60;
+        const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        let timeElement = document.getElementById('game-over-time');
+        if (!timeElement) {
+            timeElement = document.createElement('div');
+            timeElement.id = 'game-over-time';
+            gameOverMessage.appendChild(timeElement);
+        }
+        
+        // Actualizar el contenido del mensaje de Game Over
+        gameOverMessage.innerHTML = `Game Over<br><div id="game-over-time">Tiempo: ${formattedTime}</div>`;
     }
 
     // Función para llenar por inundación las celdas adyacentes vacías
@@ -209,12 +216,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Función para reiniciar el juego
     resetButton.addEventListener("click", initializeBoard);
 
-    // Función para abrir la ventana modal de ajustes
+    // Función para abrir la ventana de ajustes
     settingsButton.addEventListener("click", () => {
         settingsModal.style.display = "block";
     });
 
-    // Función para cerrar la ventana modal de ajustes
+    // Función para cerrar la ventana de ajustes
     closeButton.addEventListener("click", () => {
         settingsModal.style.display = "none";
     });
@@ -232,8 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
         rows = newGridSize;
         cols = newGridSize;
         minesCount = newMinesCount;
-        initializeBoard(); // Reiniciar el tablero con los nuevos ajustes
-        settingsModal.style.display = "none"; // Cerrar la ventana de ajustes
+        initializeBoard(); 
+        settingsModal.style.display = "none"; 
     });
 
     // Cerrar la ventana modal si se hace clic fuera de ella
@@ -247,5 +254,5 @@ document.addEventListener("DOMContentLoaded", () => {
         const seconds = secondsElapsed % 60;
         timeCounter.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
-    initializeBoard(); // Inicializar el tablero cuando la página carga
+    initializeBoard(); 
 });
