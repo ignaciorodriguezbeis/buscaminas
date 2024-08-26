@@ -1,16 +1,26 @@
 document.addEventListener("DOMContentLoaded", () => {
     const board = document.getElementById("board");
     const resetButton = document.getElementById("reset-button");
+    const settingsButton = document.getElementById("settings-button");
+    const mineCounter = document.getElementById("mine-counter");
     const gameOverMessage = document.getElementById("game-over-message");
     const rows = 20;
     const cols = 20;
     const minesCount = 40;
     let boardMatrix;
     let gameOver = false;
+    let remainingMines = minesCount;
+
+    // Función para actualizar el contador de minas
+    function updateMineCounter() {
+        mineCounter.textContent = remainingMines;
+    }
 
     // Función para inicializar el tablero
     function initializeBoard() {
         board.innerHTML = ''; // Limpiar el tablero
+        remainingMines = minesCount;
+        updateMineCounter(); // Inicializar el contador de minas
         boardMatrix = Array.from({ length: rows }, () =>
             Array.from({ length: cols }, () => ({
                 mine: false,
@@ -63,12 +73,22 @@ document.addEventListener("DOMContentLoaded", () => {
             boardMatrix[row][col].flagged = true;
             cell.classList.add("flagged");
             cell.textContent = "🚩";  // Emoji de banderita
+            remainingMines--;
         } else {
             boardMatrix[row][col].flagged = false;
             cell.classList.remove("flagged");
             cell.textContent = '';  // Remover banderita
+            remainingMines++;
         }
+        updateMineCounter(); // Actualizar el contador de minas restantes
     }
+
+    // funcionalidad al botón de ajustes
+    settingsButton.addEventListener("click", () => {
+        alert("Abrir configuraciones (aquí puedes agregar funcionalidad específica para las configuraciones)");
+    });
+
+    initializeBoard(); // Inicializar el tablero cuando la página carga 
 
     // Función para cambiar el color del número
     function setColor(cell, number) {
