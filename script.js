@@ -10,249 +10,214 @@ document.addEventListener("DOMContentLoaded", () => {
     const applySettingsButton = document.getElementById("apply-settings-button");
     const gridSizeInput = document.getElementById("grid-size");
     const mineCountInput = document.getElementById("mine-count");
+    const winMessage = document.getElementById("win-message");
+    const winText = document.getElementById("win-text");
+    const winComment = document.getElementById("win-comment");
+    const winTime = document.getElementById("win-time");
 
     let rows = 20;
     let cols = 20;
-    let minesCount = 40;
-    let boardMatrix;
-    let gameOver = false;
-    let remainingMines = minesCount;
-    let timer = null;
-    let secondsElapsed = 0;
+    let mines = 40;
+    let timer;
+    let elapsedTime = 0;
+    let boardArray = [];
+    let gameStarted = false;
 
-    // Función para actualizar el contador de minas
-    function updateMineCounter() {
-        mineCounter.textContent = remainingMines;
-    }
-
-    // Función para actualizar el contador de tiempo
-    function updateTimeCounter() {
-        timeCounter.textContent = secondsElapsed.toString().padStart(3, '0');
-    }
-
-     // Función para iniciar el contador de tiempo
-     function startTimer() {
-        if (timer !== null) return;  
-        timer = setInterval(() => {
-            secondsElapsed++;
-            updateTimeCounter();
-        }, 1000);
-    }
-
-    // Función para detener el contador de tiempo
-    function stopTimer() {
-        clearInterval(timer);
-        timer = null;
-    }
-
-    // Función para reiniciar el contador de tiempo
-    function resetTimer() {
-        stopTimer();
-        secondsElapsed = 0;
-        updateTimeCounter();
-    }
-
-    // Función para inicializar el tablero
-    function initializeBoard() {
-        board.innerHTML = ''; 
-        remainingMines = minesCount;
-        updateMineCounter(); 
-        resetTimer(); 
-        boardMatrix = Array.from({ length: rows }, () =>
-            Array.from({ length: cols }, () => ({
-                mine: false,
-                revealed: false,
-                flagged: false,
-                adjacentMines: 0,
-            }))
-        );
-
-        placeMines();
-        calculateAdjacentMines();
-        createCells();
+    function initializeGame() {
+        board.innerHTML = '';
+        boardArray = [];
+        elapsedTime = 0;
+        timeCounter.textContent = '0:00';
+        mineCounter.textContent = mines;
         gameOverMessage.style.display = 'none';
-        gameOver = false;
-    }
-
-    // Función para colocar minas aleatoriamente
-    function placeMines() {
-        let minesPlaced = 0;
-        while (minesPlaced < minesCount) {
-            const randomRow = Math.floor(Math.random() * rows);
-            const randomCol = Math.floor(Math.random() * cols);
-
-            if (!boardMatrix[randomRow][randomCol].mine) {
-                boardMatrix[randomRow][randomCol].mine = true;
-                minesPlaced++;
-            }
-        }
-    }
-
-    // Función para calcular las minas adyacentes a cada celda
-    function calculateAdjacentMines() {
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                if (!boardMatrix[row][col].mine) {
-                    boardMatrix[row][col].adjacentMines = getAdjacentMines(row, col);
-                }
-            }
-        }
-    }
-
-    // Función para obtener la cantidad de minas adyacentes a una celda
-    function getAdjacentMines(row, col) {
-        let count = 0;
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                const newRow = row + i;
-                const newCol = col + j;
-                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                    if (boardMatrix[newRow][newCol].mine) {
-                        count++;
-                    }
-                }
-            }
-        }
-        return count;
-    }
-
-    // Función para crear las celdas del tablero
-    function createCells() {
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                const cell = document.createElement("div");
-                cell.classList.add("cell");
-                cell.dataset.row = row;
-                cell.dataset.col = col;
-
-                cell.addEventListener("click", () => handleCellClick(row, col, cell));
-                cell.addEventListener("contextmenu", (event) => handleCellRightClick(row, col, cell, event));
-
-                board.appendChild(cell);
-            }
-        }
-        board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-        board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    }
-
-   // Función para manejar el clic en una celda
-   function handleCellClick(row, col, cell) {
-    if (gameOver || boardMatrix[row][col].flagged || boardMatrix[row][col].revealed) return;
-
-    if (secondsElapsed === 0) startTimer(); 
-
-    boardMatrix[row][col].revealed = true;
-
-    if (boardMatrix[row][col].mine) {
-        cell.classList.add("mine");
-        cell.textContent = "💣";
-        gameOver = true;
-        stopTimer();  
-        showGameOver();
-        } else {
-            cell.classList.add("revealed");
-            const adjacentMines = boardMatrix[row][col].adjacentMines;
-            if (adjacentMines > 0) {
-                cell.textContent = adjacentMines;
-                cell.classList.add(`mine-count-${adjacentMines}`);
-            } else {
-                floodFill(row, col);
-            }
-        }
-    }
-
-    // Función para manejar el clic derecho (marcar con banderita)
-    function handleCellRightClick(row, col, cell, event) {
-        event.preventDefault();  
-        if (gameOver || boardMatrix[row][col].revealed) return;
-
-        if (!boardMatrix[row][col].flagged) {
-            boardMatrix[row][col].flagged = true;
-            cell.classList.add("flagged");
-            cell.textContent = "🚩";  
-            remainingMines--;
-        } else {
-            boardMatrix[row][col].flagged = false;
-            cell.classList.remove("flagged");
-            cell.textContent = '';  
-            remainingMines++;
-        }
-        updateMineCounter(); 
-    }
-
-    // Función de Game Over
-    function showGameOver() {
-        gameOverMessage.style.display = 'block';
-        const minutes = Math.floor(secondsElapsed / 60);
-        const seconds = secondsElapsed % 60;
-        const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        let timeElement = document.getElementById('game-over-time');
-        if (!timeElement) {
-            timeElement = document.createElement('div');
-            timeElement.id = 'game-over-time';
-            gameOverMessage.appendChild(timeElement);
-        }
+        winMessage.style.display = 'none';
         
-        // Actualizar el contenido del mensaje de Game Over
-        gameOverMessage.innerHTML = `Game Over<br><div id="game-over-time">Tiempo: ${formattedTime}</div>`;
-    }
+        // Create the board
+        board.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
+        board.style.gridTemplateRows = `repeat(${rows}, 30px)`;
+        for (let r = 0; r < rows; r++) {
+            boardArray[r] = [];
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.addEventListener('click', handleCellClick);
+                cell.addEventListener('contextmenu', handleCellRightClick);
+                board.appendChild(cell);
+                boardArray[r][c] = {
+                    isMine: false,
+                    isRevealed: false,
+                    isFlagged: false,
+                    adjacentMines: 0
+                };
+            }
+        }
 
-    // Función para llenar por inundación las celdas adyacentes vacías
-    function floodFill(row, col) {
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                const newRow = row + i;
-                const newCol = col + j;
-                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                    const adjacentCell = document.querySelector(`[data-row='${newRow}'][data-col='${newCol}']`);
-                    if (!boardMatrix[newRow][newCol].revealed && !boardMatrix[newRow][newCol].mine) {
-                        handleCellClick(newRow, newCol, adjacentCell);
+        // Place mines
+        let minesPlaced = 0;
+        while (minesPlaced < mines) {
+            const r = Math.floor(Math.random() * rows);
+            const c = Math.floor(Math.random() * cols);
+            if (!boardArray[r][c].isMine) {
+                boardArray[r][c].isMine = true;
+                minesPlaced++;
+                // Update adjacent cells
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        const nr = r + i;
+                        const nc = c + j;
+                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !boardArray[nr][nc].isMine) {
+                            boardArray[nr][nc].adjacentMines++;
+                        }
                     }
                 }
             }
         }
     }
 
-    // Función para reiniciar el juego
-    resetButton.addEventListener("click", initializeBoard);
+    function handleCellClick(event) {
+        if (!gameStarted) {
+            startTimer();
+            gameStarted = true;
+        }
+        const cell = event.target;
+        const row = cell.dataset.row;
+        const col = cell.dataset.col;
+        const cellData = boardArray[row][col];
 
-    // Función para abrir la ventana de ajustes
-    settingsButton.addEventListener("click", () => {
-        settingsModal.style.display = "block";
-    });
+        if (cellData.isRevealed || cellData.isFlagged) return;
 
-    // Función para cerrar la ventana de ajustes
-    closeButton.addEventListener("click", () => {
-        settingsModal.style.display = "none";
-    });
-
-    // Aplicar los ajustes seleccionados
-    applySettingsButton.addEventListener("click", () => {
-        const newGridSize = parseInt(gridSizeInput.value);
-        const newMinesCount = parseInt(mineCountInput.value);
-
-        if (newMinesCount < 1 || newMinesCount >= newGridSize * newGridSize) {
-            alert("La cantidad de minas debe ser mayor a 0 y menor que el número total de casillas.");
+        if (cellData.isMine) {
+            revealAllMines();
+            showGameOver();
             return;
         }
 
-        rows = newGridSize;
-        cols = newGridSize;
-        minesCount = newMinesCount;
-        initializeBoard(); 
-        settingsModal.style.display = "none"; 
+        revealCell(row, col);
+
+        // Check win condition
+        if (checkWin()) {
+            stopTimer();
+            showWinMessage();
+        }
+    }
+
+    function handleCellRightClick(event) {
+        event.preventDefault();
+        const cell = event.target;
+        const row = cell.dataset.row;
+        const col = cell.dataset.col;
+        const cellData = boardArray[row][col];
+
+        if (cellData.isRevealed) return;
+
+        cellData.isFlagged = !cellData.isFlagged;
+        cell.classList.toggle('flagged');
+        updateMineCounter();
+    }
+
+    function revealCell(row, col) {
+        const cell = document.querySelector(`.cell[data-row='${row}'][data-col='${col}']`);
+        const cellData = boardArray[row][col];
+        if (cellData.isRevealed) return;
+
+        cellData.isRevealed = true;
+        cell.classList.add('revealed');
+        cell.classList.remove('flagged');
+        if (cellData.isMine) {
+            cell.textContent = '💣';
+            cell.classList.add('mine');
+        } else {
+            cell.textContent = cellData.adjacentMines || '';
+            if (cellData.adjacentMines) {
+                cell.classList.add(`mine-count-${cellData.adjacentMines}`);
+            }
+            if (cellData.adjacentMines === 0) {
+                // Reveal adjacent cells
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        const nr = parseInt(row) + i;
+                        const nc = parseInt(col) + j;
+                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                            revealCell(nr, nc);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function revealAllMines() {
+        board.querySelectorAll('.cell').forEach(cell => {
+            const row = cell.dataset.row;
+            const col = cell.dataset.col;
+            if (boardArray[row][col].isMine) {
+                cell.textContent = '💣';
+                cell.classList.add('mine');
+            }
+        });
+    }
+
+    function updateMineCounter() {
+        const flaggedCount = board.querySelectorAll('.cell.flagged').length;
+        mineCounter.textContent = mines - flaggedCount;
+    }
+
+    function startTimer() {
+        timer = setInterval(() => {
+            elapsedTime++;
+            const minutes = Math.floor(elapsedTime / 60);
+            const seconds = elapsedTime % 60;
+            timeCounter.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timer);
+    }
+
+    function showGameOver() {
+        gameOverMessage.style.display = 'block';
+    }
+
+    function showWinMessage() {
+        winText.textContent = "Win!";
+        winComment.textContent = "Your rock!";
+        winTime.textContent = `Time: ${timeCounter.textContent}`;
+        winMessage.style.display = 'block';
+    }
+
+    function hideSettings() {
+        settingsModal.style.display = 'none';
+    }
+
+    function showSettings() {
+        settingsModal.style.display = 'block';
+    }
+
+    function checkWin() {
+        return board.querySelectorAll('.cell.revealed').length === (rows * cols - mines);
+    }
+
+    resetButton.addEventListener("click", () => {
+        initializeGame();
+        startTimer();
+        gameStarted = true;
     });
 
-    // Cerrar la ventana modal si se hace clic fuera de ella
-    window.addEventListener("click", (event) => {
-        if (event.target == settingsModal) {
-            settingsModal.style.display = "none";
-        }
+    settingsButton.addEventListener("click", showSettings);
+
+    closeButton.addEventListener("click", hideSettings);
+
+    applySettingsButton.addEventListener("click", () => {
+        rows = cols = parseInt(gridSizeInput.value, 10);
+        mines = parseInt(mineCountInput.value, 10);
+        if (mines > rows * cols) mines = rows * cols;
+        mineCounter.textContent = mines;
+        initializeGame();
+        hideSettings();
     });
-    function updateTimeCounter() {
-        const minutes = Math.floor(secondsElapsed / 60);
-        const seconds = secondsElapsed % 60;
-        timeCounter.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    initializeBoard(); 
+
+    initializeGame();
 });
