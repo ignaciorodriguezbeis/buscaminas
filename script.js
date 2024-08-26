@@ -165,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function startTimer() {
+        stopTimer(); // Detiene cualquier temporizador anterior
         timer = setInterval(() => {
             elapsedTime++;
             const minutes = Math.floor(elapsedTime / 60);
@@ -172,9 +173,9 @@ document.addEventListener("DOMContentLoaded", () => {
             timeCounter.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         }, 1000);
     }
-
+    
     function stopTimer() {
-        clearInterval(timer);
+        clearInterval(timer); // Detiene el temporizador actual
     }
 
     function showGameOver() {
@@ -201,6 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     resetButton.addEventListener("click", () => {
+        stopTimer(); // Asegura que el temporizador anterior se detenga
         initializeGame();
         startTimer();
         gameStarted = true;
