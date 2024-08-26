@@ -206,15 +206,15 @@ body {
     cursor: pointer;
 }
 
-#time-counter {
-    width: 88px;
-    height: 36px;
+#time-counter, #mine-counter {
+    width: 60px;
+    height: 25px;
     background-color: black;
     color: red;
-    font-size: 30px;
+    font-size: 20px;
     font-weight: bold;
     text-align: center;
-    line-height: 30px;
+    line-height: 24px;
     border: 2px solid #808080;
     box-shadow: inset -2px -2px 0 #ffffff, inset 2px 2px 0 #404040;
 }
