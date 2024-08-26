@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const resetButton = document.getElementById("reset-button");
     const settingsButton = document.getElementById("settings-button");
     const mineCounter = document.getElementById("mine-counter");
+    const timeCounter = document.getElementById("time-counter");
     const gameOverMessage = document.getElementById("game-over-message");
     const settingsModal = document.getElementById("settings-modal");
     const closeButton = document.querySelector(".close-button");
@@ -16,10 +17,39 @@ document.addEventListener("DOMContentLoaded", () => {
     let boardMatrix;
     let gameOver = false;
     let remainingMines = minesCount;
+    let timer = null;
+    let secondsElapsed = 0;
 
     // Función para actualizar el contador de minas
     function updateMineCounter() {
         mineCounter.textContent = remainingMines;
+    }
+
+    // Función para actualizar el contador de tiempo
+    function updateTimeCounter() {
+        timeCounter.textContent = secondsElapsed.toString().padStart(3, '0');
+    }
+
+     // Función para iniciar el contador de tiempo
+     function startTimer() {
+        if (timer !== null) return;  // Evitar múltiples timers
+        timer = setInterval(() => {
+            secondsElapsed++;
+            updateTimeCounter();
+        }, 1000);
+    }
+
+    // Función para detener el contador de tiempo
+    function stopTimer() {
+        clearInterval(timer);
+        timer = null;
+    }
+
+    // Función para reiniciar el contador de tiempo
+    function resetTimer() {
+        stopTimer();
+        secondsElapsed = 0;
+        updateTimeCounter();
     }
 
     // Función para inicializar el tablero
@@ -27,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
         board.innerHTML = ''; // Limpiar el tablero
         remainingMines = minesCount;
         updateMineCounter(); // Inicializar el contador de minas
+        resetTimer();  // Reiniciar el contador de tiempo
         boardMatrix = Array.from({ length: rows }, () =>
             Array.from({ length: cols }, () => ({
                 mine: false,
@@ -104,17 +135,23 @@ document.addEventListener("DOMContentLoaded", () => {
         board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
     }
 
-    // Función para manejar el clic en una celda
-    function handleCellClick(row, col, cell) {
-        if (gameOver || boardMatrix[row][col].flagged || boardMatrix[row][col].revealed) return;
+   // Función para manejar el clic en una celda
+   function handleCellClick(row, col, cell) {
+    if (gameOver || boardMatrix[row][col].flagged || boardMatrix[row][col].revealed) return;
 
-        boardMatrix[row][col].revealed = true;
+    if (secondsElapsed === 0) startTimer(); // Iniciar el temporizador en el primer clic
 
-        if (boardMatrix[row][col].mine) {
-            cell.classList.add("mine");
-            cell.textContent = "💣";
-            gameOver = true;
-            showGameOver();
+    boardMatrix[row][col].revealed = true;
+
+
+    // Resto del código para manejar clics...
+
+    if (boardMatrix[row][col].mine) {
+        cell.classList.add("mine");
+        cell.textContent = "💣";
+        gameOver = true;
+        stopTimer();  // Detener el contador al perder
+        showGameOver();
         } else {
             cell.classList.add("revealed");
             const adjacentMines = boardMatrix[row][col].adjacentMines;
@@ -205,6 +242,10 @@ document.addEventListener("DOMContentLoaded", () => {
             settingsModal.style.display = "none";
         }
     });
-
+    function updateTimeCounter() {
+        const minutes = Math.floor(secondsElapsed / 60);
+        const seconds = secondsElapsed % 60;
+        timeCounter.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
     initializeBoard(); // Inicializar el tablero cuando la página carga
 });
