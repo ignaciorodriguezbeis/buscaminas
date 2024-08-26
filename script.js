@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function startTimer() {
-        stopTimer(); // Detiene cualquier temporizador anterior
+        stopTimer(); 
         timer = setInterval(() => {
             elapsedTime++;
             const minutes = Math.floor(elapsedTime / 60);
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     function stopTimer() {
-        clearInterval(timer); // Detiene el temporizador actual
+        clearInterval(timer); 
     }
 
     function showGameOver() {
@@ -202,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     resetButton.addEventListener("click", () => {
-        stopTimer(); // Asegura que el temporizador anterior se detenga
+        stopTimer(); 
         initializeGame();
         startTimer();
         gameStarted = true;
